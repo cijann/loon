@@ -2,20 +2,20 @@
 #!desc=maoyulin.xyz 每日签到 + Cookie 抓取，两个功能可独立开关
 #!author=WorkBuddy
 #!icon=https://maoyulin.xyz/favicon.ico
-#!system=ios
+
+[Argument]
+SESSION=input,,tag=手动填写 Session,desc=留空则使用抓Cookie脚本自动存储的值
+CAPTURE_ENABLE=switch,"false","true",tag=是否开启抓Cookie,desc=开启后访问maoyulin.xyz自动抓取
+CRONEXP=input,"0 8 * * *",tag=签到时间,desc=CRON表达式
 
 [Script]
-; ------- 签到 -------
-; argument 填写格式：session=你的session值;user_id=你的用户ID
-; 例：session=ab12cd34...;user_id=
-; 留空则尝试使用抓Cookie脚本自动存储的值
-cron "0 8 * * *" script-path=https://raw.githubusercontent.com/cijann/loon/main/plugin/maoyulin-checkin.js, argument=session=;user_id=, tag=猫羽雫签到
-
 ; ------- 抓Cookie -------
-; 【如无效可忽略】开启后，Safari 访问 maoyulin.xyz 自动抓取 session
-; 抓到后建议关掉，避免每次请求都触发
-; 手动填写 session 后此脚本可不开
-http-request ^https?://maoyulin\.xyz script-path=https://raw.githubusercontent.com/cijann/loon/main/plugin/maoyulin-cookie.js, requires-body=0, tag=猫羽雫抓Cookie
+; 由上面「是否开启抓Cookie」开关控制，开启后访问 maoyulin.xyz 自动抓取 session
+http-request ^https?://maoyulin\.xyz script-path=https://raw.githubusercontent.com/cijann/loon/main/plugin/maoyulin-cookie.js, requires-body=0, tag=猫羽雫抓Cookie, enable={CAPTURE_ENABLE}
+
+; ------- 签到 -------
+; SESSION 留空则使用抓Cookie脚本自动存储的值
+cron {CRONEXP} script-path=https://raw.githubusercontent.com/cijann/loon/main/plugin/maoyulin-checkin.js, tag=猫羽雫签到, argument={SESSION}
 
 [MITM]
 hostname = maoyulin.xyz

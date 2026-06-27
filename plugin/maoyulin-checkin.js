@@ -3,8 +3,12 @@
  * 站点: maoyulin.xyz (NewAPI)
  * 适配: Loon
  *
+ * argument 传参格式（由插件 Argument 配置）:
+ *   直接传 session 字符串，例如：ab12cd34...
+ *   JS 内兼容两种格式：纯字符串 或 JSON {"session":"xxx"}
+ *
  * session 来源优先级：
- *   1. 插件参数手动填写
+ *   1. argument 手动填写
  *   2. 抓Cookie 脚本自动存储的持久化数据
  ************************************/
 
@@ -13,32 +17,31 @@ const BASE_URL = `https://${SITE}`;
 const STORE_KEY = "maoyulin_session";
 
 // ========== 读取配置 ==========
-// 支持两种 argument 格式：
-//   1. JSON: {"session":"xxx","user_id":"xxx"}
-//   2. 简单: session=xxx;user_id=xxx
-let config = {};
+// argument 可能是纯 session 字符串，也可能是 JSON
+let SESSION = "";
+let USER_ID = "";
+
 try {
   if (typeof $argument !== "undefined" && $argument) {
     const arg = $argument.trim();
+    // 尝试解析 JSON
     if (arg.startsWith("{")) {
-      config = JSON.parse(arg);
+      const config = JSON.parse(arg);
+      SESSION = config.session || "";
+      USER_ID = config.user_id || "";
     } else {
-      // 解析 key=value;key2=value2 格式
-      arg.split(";").forEach(pair => {
-        const [k, ...rest] = pair.split("=");
-        if (k && rest.length) config[k.trim()] = rest.join("=").trim();
-      });
+      // 纯字符串，当作 session
+      SESSION = arg;
     }
   }
 } catch (e) {
   console.log(`[猫羽雫签到] 参数解析失败: ${e}`);
 }
 
-// 优先手动填写，其次从持久化存储读取
-const SESSION = config.session
-  || (typeof $persistentStore !== "undefined" ? $persistentStore.read(STORE_KEY) : "")
-  || "";
-const USER_ID = config.user_id || "";
+// argument 为空或留空时，尝试从持久化存储读取
+if (!SESSION || SESSION === "null" || SESSION === "undefined") {
+  SESSION = (typeof $persistentStore !== "undefined" ? $persistentStore.read(STORE_KEY) : "") || "";
+}
 
 // ========== HTTP 请求 ==========
 function $get(url, headers) {
@@ -79,8 +82,8 @@ function fmt(v) {
 (async () => {
   if (!SESSION) {
     console.log("[猫羽雫签到] ❌ 无 session");
-    console.log("[猫羽雫签到] 请: ①手动填写参数 或 ②开启抓Cookie脚本后访问 maoyulin.xyz");
-    notify("猫羽雫签到", "❌ 缺少凭证", "手动填写 session 或开启抓Cookie后访问网站");
+    console.log("[猫羽雫签到] 请: ①在插件「手动填写Session」输入框填入session 或 ②开启抓Cookie后访问 maoyulin.xyz");
+    notify("猫羽雫签到", "❌ 缺少凭证", "请手动填写 Session 或开启抓Cookie");
     $done();
     return;
   }
@@ -97,7 +100,7 @@ function fmt(v) {
   const userInfo = await $get(`${BASE_URL}/api/user/self`, headers);
   if (!userInfo || !userInfo.data || userInfo.success === false) {
     console.log("[猫羽雫签到] ❌ Session 已过期");
-    notify("猫羽雫签到", "❌ 登录过期", "Session 已失效，请重新抓取或手动填写");
+    notify("猫羽雫签到", "❌ 登录过期", "Session 已失效，请重新填写或抓取");
     $done();
     return;
   }
