@@ -4,24 +4,17 @@
 #!icon=https://maoyulin.xyz/favicon.ico
 #!system=ios
 
-[Argument]
-; ============ 功能说明 ============
-; 两个功能各有一个脚本，可在 Loon 插件详情里单独开关：
-;   ① 签到 — 每天 8:00 自动签到
-;   ② 抓Cookie — 开启后，用 Safari 打开 maoyulin.xyz，自动抓取 session 并存起来
-;
-; session 手动填写优先于自动抓取。留空则使用抓取到的值。
-; ================================
-session=
-user_id=
-
 [Script]
-; -------- 签到 --------
-cron "0 8 * * *" script-path=https://raw.githubusercontent.com/cijann/loon/main/plugin/maoyulin-checkin.js, tag=猫羽雫签到
+; ------- 签到 -------
+; argument 填写格式：session=你的session值;user_id=你的用户ID
+; 例：session=ab12cd34...;user_id=
+; 留空则尝试使用抓Cookie脚本自动存储的值
+cron "0 8 * * *" script-path=https://raw.githubusercontent.com/cijann/loon/main/plugin/maoyulin-checkin.js, argument=session=;user_id=, tag=猫羽雫签到
 
-; -------- 抓Cookie --------
-; 打开后，用 Safari 访问 maoyulin.xyz 任意页面即可自动抓取 Cookie
+; ------- 抓Cookie -------
+; 【如无效可忽略】开启后，Safari 访问 maoyulin.xyz 自动抓取 session
 ; 抓到后建议关掉，避免每次请求都触发
+; 手动填写 session 后此脚本可不开
 http-request ^https?://maoyulin\.xyz script-path=https://raw.githubusercontent.com/cijann/loon/main/plugin/maoyulin-cookie.js, requires-body=0, tag=猫羽雫抓Cookie
 
 [MITM]

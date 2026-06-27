@@ -13,10 +13,22 @@ const BASE_URL = `https://${SITE}`;
 const STORE_KEY = "maoyulin_session";
 
 // ========== 读取配置 ==========
+// 支持两种 argument 格式：
+//   1. JSON: {"session":"xxx","user_id":"xxx"}
+//   2. 简单: session=xxx;user_id=xxx
 let config = {};
 try {
   if (typeof $argument !== "undefined" && $argument) {
-    config = JSON.parse($argument);
+    const arg = $argument.trim();
+    if (arg.startsWith("{")) {
+      config = JSON.parse(arg);
+    } else {
+      // 解析 key=value;key2=value2 格式
+      arg.split(";").forEach(pair => {
+        const [k, ...rest] = pair.split("=");
+        if (k && rest.length) config[k.trim()] = rest.join("=").trim();
+      });
+    }
   }
 } catch (e) {
   console.log(`[猫羽雫签到] 参数解析失败: ${e}`);
