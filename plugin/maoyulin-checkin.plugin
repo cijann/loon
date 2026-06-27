@@ -10,8 +10,9 @@ CRONEXP=input,"0 8 * * *",tag=签到时间,desc=CRON表达式
 
 [Script]
 ; ------- 抓Cookie -------
-; 由上面「是否开启抓Cookie」开关控制，开启后访问 maoyulin.xyz 自动抓取 session
-http-request ^https?://maoyulin\.xyz script-path=https://raw.githubusercontent.com/cijann/loon/main/plugin/maoyulin-cookie.js, requires-body=0, tag=猫羽雫抓Cookie, enable={CAPTURE_ENABLE}
+; 由上面「是否开启抓Cookie」开关控制
+; 开启后，登录或访问 maoyulin.xyz 时自动从响应头抓取 session
+http-response ^https?://maoyulin\.xyz script-path=https://raw.githubusercontent.com/cijann/loon/main/plugin/maoyulin-cookie.js, tag=猫羽雫抓Cookie, enable={CAPTURE_ENABLE}
 
 ; ------- 签到 -------
 ; SESSION 留空则使用抓Cookie脚本自动存储的值
